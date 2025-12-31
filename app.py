@@ -2,6 +2,7 @@ import streamlit as st
 import sqlite3
 import pandas as pd
 import gspread
+import json
 from oauth2client.client import flow_from_clientsecrets
 from oauth2client.file import Storage
 from oauth2client.tools import run_flow
@@ -11,7 +12,7 @@ import os
 # 1. 設定エリア（ここを自分の環境に合わせて書き換える）
 # ==========================================
 JSON_FILE = 'client_secret.json'
-STORAGE_FILE = 'credentials_storage.json'
+#STORAGE_FILE = 'credentials_storage.json'
 SPREADSHEET_ID = '1keU0bp0xhlohxptLLLddEXQfKJEWc8F2ubSDJcNbWZY' # URLから取得したID
 
 # スプシの列設定（名前はスプシの1行目と完全一致させる）
@@ -24,12 +25,11 @@ STATUS_COLUMN_INDEX = 7 # 「承認ステータス」が左から何列目か(G�
 # 2. 認証・Google連携機能
 # ==========================================
 def get_gspread_client():
+    auth_info = json.loads(st.secrets["google_auth"])
     scope = ["https://www.googleapis.com/auth/spreadsheets", "https://www.googleapis.com/auth/drive"]
-    storage = Storage(STORAGE_FILE)
-    creds = storage.get()
-    if not creds or creds.invalid:
-        flow = flow_from_clientsecrets(JSON_FILE, scope=scope)
-        creds = run_flow(flow, storage)
+    #storage = Storage(STORAGE_FILE)
+    from oauth2client.service_account import ServiceAccountCredentials
+    creds = ServiceAccountCredentials.from_json_keyfile_dict(auth_info, scope)
     return gspread.authorize(creds)
 
 # ==========================================
